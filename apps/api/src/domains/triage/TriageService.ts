@@ -91,7 +91,7 @@ export class TriageService {
       riskLevel: record.riskLevel as TriageResult['riskLevel'],
       spendCategory: record.spendCategory,
       budgetType: record.budgetType as TriageResult['budgetType'],
-      anomalies: record.anomalies as TriageResult['anomalies'],
+      anomalies: record.anomalies as unknown as TriageResult['anomalies'],
       aiSummary: record.aiSummary,
       recommendations: record.recommendations as string[],
       aiProvider: record.aiProvider,

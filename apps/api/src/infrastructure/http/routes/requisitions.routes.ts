@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 import type { RequisitionListItem, RequisitionDetail, PaginatedResponse } from '@sap-triage/shared';
 import { AppError } from '../middleware/error.middleware';
 
@@ -29,10 +29,12 @@ export function createRequisitionsRouter(prisma: PrismaClient): Router {
     const { status, riskLevel, plant, startDate, endDate, search, page, pageSize } = parsed.data;
     const skip = (page - 1) * pageSize;
 
-    const where: Parameters<typeof prisma.purchaseRequisition.findMany>[0]['where'] = {};
+    const where: Prisma.PurchaseRequisitionWhereInput = {};
     if (status) where.processingStatus = status;
-    if (startDate) where.creationDate = { gte: new Date(startDate) };
-    if (endDate) where.creationDate = { ...where.creationDate, lte: new Date(endDate) };
+    const dateFilter: { gte?: Date; lte?: Date } = {};
+    if (startDate) dateFilter.gte = new Date(startDate);
+    if (endDate) dateFilter.lte = new Date(endDate);
+    if (startDate || endDate) where.creationDate = dateFilter;
     if (search) {
       where.OR = [
         { purchaseRequisition: { contains: search, mode: 'insensitive' } },
@@ -107,7 +109,7 @@ export function createRequisitionsRouter(prisma: PrismaClient): Router {
   });
 
   router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const record = await prisma.purchaseRequisition.findUnique({
       where: { id },
@@ -171,7 +173,7 @@ export function createRequisitionsRouter(prisma: PrismaClient): Router {
             riskLevel: record.triageResult.riskLevel as 'low' | 'medium' | 'high' | 'critical',
             spendCategory: record.triageResult.spendCategory,
             budgetType: record.triageResult.budgetType as 'CAPEX' | 'OPEX' | 'UNKNOWN',
-            anomalies: record.triageResult.anomalies as import('@sap-triage/shared').Anomaly[],
+            anomalies: record.triageResult.anomalies as unknown as import('@sap-triage/shared').Anomaly[],
             aiSummary: record.triageResult.aiSummary,
             recommendations: record.triageResult.recommendations as string[],
             aiProvider: record.triageResult.aiProvider,

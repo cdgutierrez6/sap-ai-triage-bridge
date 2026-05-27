@@ -8,7 +8,7 @@ export function createTriageRouter(triageService: TriageService): Router {
   const router = Router();
 
   router.post('/run/:requisitionId', async (req: Request, res: Response, next: NextFunction) => {
-    const { requisitionId } = req.params;
+    const requisitionId = req.params.requisitionId as string;
     if (!requisitionId?.match(/^[0-9a-f-]{36}$/i)) {
       next(new AppError('VALIDATION_ERROR', 'Invalid requisitionId format', 422));
       return;
@@ -42,7 +42,7 @@ export function createTriageRouter(triageService: TriageService): Router {
   });
 
   router.get('/:requisitionId', async (req: Request, res: Response, next: NextFunction) => {
-    const { requisitionId } = req.params;
+    const requisitionId = req.params.requisitionId as string;
     if (!requisitionId?.match(/^[0-9a-f-]{36}$/i)) {
       next(new AppError('VALIDATION_ERROR', 'Invalid requisitionId format', 422));
       return;

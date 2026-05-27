@@ -9,10 +9,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "declaration": true,
-    "sourceMap": true,
     "paths": {
       "@sap-triage/shared": ["../../packages/shared/src/index.ts"]
     }

@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: sap-triage-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sap_user
+      POSTGRES_PASSWORD: sap_dev_password
+      POSTGRES_DB: sap_triage
+    ports:
+      - "5432:5432"
+    volumes:
+      - sap_triage_data:/var/lib/postgresql/data
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sap_user -d sap_triage"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sap_triage_data:
