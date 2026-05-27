@@ -1,0 +1,122 @@
+{
+  "name": "SAP AI Triage Bridge — Auto Triage & Alert",
+  "nodes": [
+    {
+      "parameters": { "rule": { "interval": [{ "field": "hours", "hoursInterval": 1 }] } },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SAP_TRIAGE_API_URL }}/api/v1/sync/trigger",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "sync-odata",
+      "name": "Sync OData",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "credentials": { "httpHeaderAuth": { "id": "sap-triage-api-key", "name": "SAP Triage API Key" } }
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SAP_TRIAGE_API_URL }}/api/v1/requisitions?pageSize=50",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "fetch-requisitions",
+      "name": "Fetch Requisitions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": { "httpHeaderAuth": { "id": "sap-triage-api-key", "name": "SAP Triage API Key" } }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "split-prs",
+      "name": "Split PRs",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            { "id": "no-triage", "leftValue": "={{ $json.triage }}", "rightValue": "", "operator": { "type": "object", "operation": "notExists" } }
+          ]
+        }
+      },
+      "id": "filter-untriaged",
+      "name": "Filter Untriaged",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SAP_TRIAGE_API_URL }}/api/v1/triage/run/{{ $json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "run-triage",
+      "name": "Run Triage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "credentials": { "httpHeaderAuth": { "id": "sap-triage-api-key", "name": "SAP Triage API Key" } }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            { "id": "is-critical", "leftValue": "={{ $json.data.riskLevel }}", "rightValue": "critical", "operator": { "type": "string", "operation": "equals" } }
+          ]
+        }
+      },
+      "id": "filter-critical",
+      "name": "Filter Critical",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "webhookUri": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "text": "🚨 *CRITICAL RISK PR Detected*\n\n*PR:* {{ $('run-triage').item.json.data.requisitionId }}\n*Risk Score:* {{ $json.data.riskScore }}/100\n*Category:* {{ $json.data.spendCategory }}\n*Summary:* {{ $json.data.aiSummary }}\n\n<{{ $env.SAP_TRIAGE_API_URL }}|View Dashboard>",
+        "otherOptions": {}
+      },
+      "id": "slack-alert",
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1780, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger":    { "main": [[{ "node": "Sync OData", "type": "main", "index": 0 }]] },
+    "Sync OData":          { "main": [[{ "node": "Fetch Requisitions", "type": "main", "index": 0 }]] },
+    "Fetch Requisitions":  { "main": [[{ "node": "Split PRs", "type": "main", "index": 0 }]] },
+    "Split PRs":           { "main": [[{ "node": "Filter Untriaged", "type": "main", "index": 0 }]] },
+    "Filter Untriaged":    { "main": [[{ "node": "Run Triage", "type": "main", "index": 0 }]] },
+    "Run Triage":          { "main": [[{ "node": "Filter Critical", "type": "main", "index": 0 }]] },
+    "Filter Critical":     { "main": [[{ "node": "Slack Alert", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "meta": { "templateCredsSetupCompleted": true }
+}

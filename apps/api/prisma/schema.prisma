@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PurchaseRequisition {
+  id                      String    @id @default(uuid()) @db.Uuid
+  purchaseRequisition     String    @unique @db.VarChar(10)
+  purchaseRequisitionType String    @db.VarChar(4)
+  description             String?   @db.VarChar(40)
+  companyCode             String    @db.VarChar(4)
+  createdByUser           String    @db.VarChar(12)
+  creationDate            DateTime  @db.Date
+  lastChangeDateTime      DateTime  @db.Timestamptz
+  processingStatus        String    @db.VarChar(2)
+  rawSapPayload           Json
+  sandboxMode             Boolean   @default(false)
+  syncedAt                DateTime  @db.Timestamptz
+  createdAt               DateTime  @default(now()) @db.Timestamptz
+  updatedAt               DateTime  @updatedAt @db.Timestamptz
+
+  items        PurchaseRequisitionItem[]
+  triageResult TriageResult?
+
+  @@index([processingStatus, creationDate(sort: Desc)])
+  @@map("purchase_requisitions")
+}
+
+model PurchaseRequisitionItem {
+  id                        String    @id @default(uuid()) @db.Uuid
+  requisitionId             String    @db.Uuid
+  purchaseRequisition       String    @db.VarChar(10)
+  purchaseRequisitionItem   String    @db.VarChar(5)
+  purchReqnItemCategory     String?   @db.VarChar(1)
+  accountAssignmentCategory String?   @db.VarChar(1)
+  shortText                 String?   @db.VarChar(40)
+  material                  String?   @db.VarChar(40)
+  materialGroup             String?   @db.VarChar(9)
+  plant                     String?   @db.VarChar(4)
+  storageLocation           String?   @db.VarChar(4)
+  requestedQuantity         Decimal?  @db.Decimal(13, 3)
+  requestedQuantityUnit     String?   @db.VarChar(3)
+  priceInDocumentCurrency   Decimal?  @db.Decimal(13, 2)
+  documentCurrency          String?   @db.VarChar(5)
+  totalPrice                Decimal?  @db.Decimal(15, 2)
+  deliveryDate              DateTime? @db.Date
+  purchasingGroup           String?   @db.VarChar(3)
+  purchasingOrganization    String?   @db.VarChar(4)
+  requisitioner             String?   @db.VarChar(12)
+  supplier                  String?   @db.VarChar(10)
+  itemProcessingStatus      String?   @db.VarChar(2)
+  createdAt                 DateTime  @default(now()) @db.Timestamptz
+
+  requisition PurchaseRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+
+  @@index([requisitionId])
+  @@index([material])
+  @@map("purchase_requisition_items")
+}
+
+model TriageResult {
+  id               String    @id @default(uuid()) @db.Uuid
+  requisitionId    String    @unique @db.Uuid
+  riskScore        Int
+  riskLevel        String    @db.VarChar(10)
+  spendCategory    String    @db.VarChar(50)
+  budgetType       String    @db.VarChar(10)
+  anomalies        Json
+  aiSummary        String
+  recommendations  Json
+  aiProvider       String    @db.VarChar(20)
+  aiModel          String    @db.VarChar(50)
+  promptTokens     Int?
+  completionTokens Int?
+  processingTimeMs Int?
+  triagedAt        DateTime  @db.Timestamptz
+  createdAt        DateTime  @default(now()) @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @db.Timestamptz
+
+  requisition PurchaseRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+
+  @@index([riskLevel, triagedAt(sort: Desc)])
+  @@map("triage_results")
+}
+
+model SyncLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  mode            String   @db.VarChar(10)
+  status          String   @db.VarChar(10)
+  recordsFetched  Int      @default(0)
+  recordsUpserted Int      @default(0)
+  errorMessage    String?
+  durationMs      Int?
+  syncedAt        DateTime @default(now()) @db.Timestamptz
+
+  @@map("sync_logs")
+}

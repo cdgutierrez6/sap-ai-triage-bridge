@@ -1,0 +1,26 @@
+{
+  "name": "sap-ai-triage-bridge",
+  "private": true,
+  "description": "AI-powered automation layer that ingests SAP S/4HANA purchase-requisition data and runs intelligent triage",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "db:migrate": "pnpm --filter @sap-triage/api exec prisma migrate dev",
+    "db:migrate:prod": "pnpm --filter @sap-triage/api exec prisma migrate deploy",
+    "db:generate": "pnpm --filter @sap-triage/api exec prisma generate",
+    "db:studio": "pnpm --filter @sap-triage/api exec prisma studio",
+    "db:reset": "pnpm --filter @sap-triage/api exec prisma migrate reset"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

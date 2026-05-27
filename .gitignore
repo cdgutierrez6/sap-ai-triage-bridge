@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+
+# Prisma
+apps/api/prisma/migrations/
+
+# Turbo
+.turbo/
+
+# Vercel
+.vercel/
+
+# Coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
