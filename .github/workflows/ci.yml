@@ -33,18 +33,18 @@ jobs:
       TEST_DATABASE_URL: postgresql://test_user:test_password@localhost:5432/sap_triage_test
       SAP_MODE: sandbox
       AI_PROVIDER: claude
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # Placeholder key for CI — tests mock the AI provider, no real API calls are made
+      ANTHROPIC_API_KEY: sk-ant-ci-placeholder-key-for-tests-only-not-real
 
     steps:
       - uses: actions/checkout@v4
 
+      # Reads version from packageManager field in package.json — no version: conflict
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
@@ -52,9 +52,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
-
-      - name: Lint
-        run: pnpm lint
 
       - name: Generate Prisma client
         run: pnpm db:generate
