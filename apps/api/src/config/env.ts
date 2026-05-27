@@ -12,6 +12,7 @@ const envSchema = z
     ANTHROPIC_API_KEY: z.string().optional(),
     OPENAI_API_KEY: z.string().optional(),
     N8N_WEBHOOK_SECRET: z.string().min(16).optional(),
+    CORS_ALLOWED_ORIGINS: z.string().default('http://localhost:5173'),
     SAP_BTP_BASE_URL: z.string().url().optional(),
     SAP_BTP_CLIENT_ID: z.string().optional(),
     SAP_BTP_CLIENT_SECRET: z.string().optional(),

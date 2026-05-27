@@ -110,12 +110,31 @@ export class ClaudeProvider implements AIProvider {
     };
   }
 
+  private sanitizeTextField(value: string | null): string | null {
+    if (!value) return null;
+    return value
+      .replace(/ignore\s+(previous|all)\s+instructions?/gi, '[FILTERED]')
+      .replace(/system\s*:/gi, '[FILTERED]')
+      .slice(0, 500);
+  }
+
   private buildUserPrompt(requisition: SapPurchaseRequisition): string {
+    const sanitized: SapPurchaseRequisition = {
+      ...requisition,
+      PurReqnDescription: this.sanitizeTextField(requisition.PurReqnDescription),
+      to_PurchaseReqnItem: requisition.to_PurchaseReqnItem.map((item) => ({
+        ...item,
+        PurchasingDocumentItemText: this.sanitizeTextField(item.PurchasingDocumentItemText),
+        RequisitionerName: this.sanitizeTextField(item.RequisitionerName),
+      })),
+    };
+
+    const today = new Date().toISOString().split('T')[0];
     return `Analyze this SAP Purchase Requisition and return the JSON triage assessment:
 
-${JSON.stringify(requisition, null, 2)}
+${JSON.stringify(sanitized, null, 2)}
 
-Today's date: 2026-05-27. Return ONLY the JSON object, no markdown, no explanation.`;
+Today's date: ${today}. Return ONLY the JSON object, no markdown, no explanation.`;
   }
 
   private parseJsonOutput(text: string): unknown {

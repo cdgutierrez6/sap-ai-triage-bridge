@@ -25,10 +25,24 @@ const aiProvider = AIProviderFactory.create(env.AI_PROVIDER);
 const triageService = new TriageService(prisma, aiProvider);
 const syncService = new SyncService(sapClient, prisma);
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: (env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:5173').split(',').map((o) => o.trim()),
+  methods: ['GET', 'POST', 'DELETE'],
+  credentials: false,
+}));
+app.use(express.json({ limit: '1mb' }));
 app.use(requestIdMiddleware);
 app.use(pinoHttp({ logger }));
+
+// HTTP security headers
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('X-DNS-Prefetch-Control', 'off');
+  next();
+});
 
 const triageRateLimiter = rateLimit({
   windowMs: 60_000,
@@ -38,10 +52,18 @@ const triageRateLimiter = rateLimit({
   message: { error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests, please try again later' } },
 });
 
+const syncRateLimiter = rateLimit({
+  windowMs: 60 * 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Sync rate limit exceeded: max 10/hour' } },
+});
+
 app.use('/api/v1/health', createHealthRouter(prisma, sapClient));
 app.use('/api/v1/requisitions', authMiddleware, createRequisitionsRouter(prisma));
 app.use('/api/v1/triage', authMiddleware, triageRateLimiter, createTriageRouter(triageService));
-app.use('/api/v1/sync', authMiddleware, createSyncRouter(syncService, prisma));
+app.use('/api/v1/sync', authMiddleware, syncRateLimiter, createSyncRouter(syncService, prisma));
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
