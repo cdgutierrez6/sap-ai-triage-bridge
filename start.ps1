@@ -1,11 +1,11 @@
-# SAP AI Triage Bridge — Script de inicio local
-# Ejecutar desde la raíz del proyecto: .\start.ps1
+# SAP AI Triage Bridge - Script de inicio local
+# Ejecutar desde la raiz del proyecto: .\start.ps1
 
 Write-Host ""
-Write-Host "=== SAP AI Triage Bridge — Setup Local ===" -ForegroundColor Cyan
+Write-Host "=== SAP AI Triage Bridge - Setup Local ===" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Verificar que pnpm esté instalado
+# 1. Verificar que pnpm este instalado
 if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
     Write-Host "[1/5] Instalando pnpm..." -ForegroundColor Yellow
     npm install -g pnpm@9
@@ -34,18 +34,18 @@ do {
     }
     $attempts++
     if ($attempts -eq 1) {
-        Write-Host "      Docker no está corriendo. Intentando iniciar Docker Desktop..." -ForegroundColor Yellow
+        Write-Host "      Docker no esta corriendo. Intentando iniciar Docker Desktop..." -ForegroundColor Yellow
         Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe" -ErrorAction SilentlyContinue
         Write-Host "      Esperando que Docker Desktop arranque (puede tardar ~30s)..." -ForegroundColor Yellow
     }
     Start-Sleep 5
-} while ($attempts -le 18)  # máximo 90 segundos
+} while ($attempts -le 18)  # maximo 90 segundos
 
 if (-not $dockerOk) {
     Write-Host ""
     Write-Host "ERROR: Docker Desktop no pudo iniciarse." -ForegroundColor Red
     Write-Host "   1. Abre Docker Desktop manualmente" -ForegroundColor White
-    Write-Host "   2. Espera que el ícono de Docker esté activo en la barra de tareas" -ForegroundColor White
+    Write-Host "   2. Espera que el icono de Docker este activo en la barra de tareas" -ForegroundColor White
     Write-Host "   3. Vuelve a ejecutar: .\start.ps1" -ForegroundColor White
     exit 1
 }
@@ -55,7 +55,7 @@ Write-Host "[4/5] Iniciando PostgreSQL (docker compose up)..." -ForegroundColor 
 docker compose up -d
 
 # Esperar healthcheck
-Write-Host "      Esperando que PostgreSQL esté listo..." -ForegroundColor Yellow
+Write-Host "      Esperando que PostgreSQL este listo..." -ForegroundColor Yellow
 $dbReady = $false
 for ($i = 0; $i -lt 20; $i++) {
     $health = docker inspect sap-triage-db --format "{{.State.Health.Status}}" 2>&1
@@ -75,7 +75,6 @@ if (-not $dbReady) {
 Write-Host "[5/5] Generando Prisma client y aplicando migraciones..." -ForegroundColor Yellow
 pnpm db:generate 2>&1 | Out-Null
 
-# Verificar si ya hay migraciones aplicadas
 $migrateOutput = pnpm db:migrate 2>&1
 if ($LASTEXITCODE -eq 0) {
     Write-Host "      Migraciones aplicadas OK" -ForegroundColor Green
@@ -90,10 +89,10 @@ Write-Host "=== Todo listo ===" -ForegroundColor Green
 Write-Host ""
 Write-Host "   API:       http://localhost:3001" -ForegroundColor Cyan
 Write-Host "   Frontend:  http://localhost:5173" -ForegroundColor Cyan
-Write-Host "   DB Studio: ejecuta 'pnpm db:studio' en otra terminal" -ForegroundColor Cyan
+Write-Host "   DB Studio: ejecuta pnpm db:studio en otra terminal" -ForegroundColor Cyan
 Write-Host ""
 
-# IMPORTANTE: advertencia sobre la API key
+# Advertencia sobre la API key
 $envContent = Get-Content "apps\api\.env" -ErrorAction SilentlyContinue
 if ($envContent -match "REEMPLAZA") {
     Write-Host "AVISO: Configura tu ANTHROPIC_API_KEY en apps\api\.env" -ForegroundColor Yellow
