@@ -39,7 +39,7 @@ do {
         Write-Host "      Esperando que Docker Desktop arranque (puede tardar ~30s)..." -ForegroundColor Yellow
     }
     Start-Sleep 5
-} while ($attempts -le 18)  # maximo 90 segundos
+} while ($attempts -le 18)
 
 if (-not $dockerOk) {
     Write-Host ""
@@ -50,9 +50,19 @@ if (-not $dockerOk) {
     exit 1
 }
 
-# 4. Levantar PostgreSQL
-Write-Host "[4/5] Iniciando PostgreSQL (docker compose up)..." -ForegroundColor Yellow
-docker compose up -d
+# 4. Levantar PostgreSQL en puerto 5433
+# (puerto 5432 puede estar ocupado por PostgreSQL local de Windows)
+Write-Host "[4/5] Iniciando PostgreSQL en puerto 5433 (docker compose up)..." -ForegroundColor Yellow
+$composeOutput = docker compose up -d 2>&1
+if ($LASTEXITCODE -ne 0) {
+    if ($composeOutput -match "port is already allocated" -or $composeOutput -match "address already in use") {
+        Write-Host "      El puerto 5433 tambien esta ocupado." -ForegroundColor Red
+        Write-Host "      Ejecuta: docker rm -f sap-triage-db  y vuelve a intentarlo." -ForegroundColor White
+        exit 1
+    }
+    Write-Host $composeOutput -ForegroundColor Red
+    exit 1
+}
 
 # Esperar healthcheck
 Write-Host "      Esperando que PostgreSQL este listo..." -ForegroundColor Yellow
@@ -61,7 +71,7 @@ for ($i = 0; $i -lt 20; $i++) {
     $health = docker inspect sap-triage-db --format "{{.State.Health.Status}}" 2>&1
     if ($health -eq "healthy") {
         $dbReady = $true
-        Write-Host "      PostgreSQL listo" -ForegroundColor Green
+        Write-Host "      PostgreSQL listo en puerto 5433" -ForegroundColor Green
         break
     }
     Start-Sleep 3

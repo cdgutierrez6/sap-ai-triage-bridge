@@ -13,8 +13,8 @@ export default defineConfig({
       ANTHROPIC_API_KEY: 'sk-ant-test-placeholder-for-vitest-do-not-use',
       N8N_WEBHOOK_SECRET: 'test-webhook-secret-16chars',
       SAP_MODE: 'sandbox',
-      DATABASE_URL: 'postgresql://sap_user:sap_dev_password@localhost:5432/sap_triage',
-      TEST_DATABASE_URL: 'postgresql://sap_user:sap_dev_password@localhost:5432/sap_triage_test',
+      DATABASE_URL: 'postgresql://sap_user:sap_dev_password@localhost:5433/sap_triage',
+      TEST_DATABASE_URL: 'postgresql://sap_user:sap_dev_password@localhost:5433/sap_triage_test',
     },
     coverage: {
       provider: 'v8',

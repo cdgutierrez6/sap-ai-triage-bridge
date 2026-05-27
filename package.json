@@ -9,7 +9,7 @@
     "test:coverage": "turbo test:coverage",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "db:migrate": "pnpm --filter @sap-triage/api exec prisma migrate dev",
+    "db:migrate": "pnpm --filter @sap-triage/api exec prisma migrate dev --name init",
     "db:migrate:prod": "pnpm --filter @sap-triage/api exec prisma migrate deploy",
     "db:generate": "pnpm --filter @sap-triage/api exec prisma generate",
     "db:studio": "pnpm --filter @sap-triage/api exec prisma studio",

@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: sap_dev_password
       POSTGRES_DB: sap_triage
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - sap_triage_data:/var/lib/postgresql/data
       - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql

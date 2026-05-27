@@ -5,8 +5,6 @@ dist/
 .env.*.local
 *.log
 
-# Prisma
-apps/api/prisma/migrations/
 
 # Turbo
 .turbo/
