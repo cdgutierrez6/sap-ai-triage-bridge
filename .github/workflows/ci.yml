@@ -50,11 +50,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        run: pnpm typecheck
-
+      # Generate Prisma client BEFORE typecheck — without it tsc sees the pnpm
+      # store stub (no model types) and fails with TS2339 / implicit-any errors.
       - name: Generate Prisma client
         run: pnpm db:generate
+
+      - name: Typecheck
+        run: pnpm typecheck
 
       - name: Run DB migrations
         run: pnpm --filter @sap-triage/api exec prisma migrate deploy

@@ -1,5 +1,9 @@
 generator client {
   provider = "prisma-client-js"
+  // Explicit output so both Windows (local) and Linux (CI/pnpm hoist) generate
+  // to the same deterministic path. tsconfig.json maps "@prisma/client" here
+  // so TypeScript bypasses pnpm symlinks and reads the generated types directly.
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {

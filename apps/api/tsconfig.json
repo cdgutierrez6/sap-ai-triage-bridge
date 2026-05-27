@@ -10,7 +10,12 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "paths": {
-      "@sap-triage/shared": ["../../packages/shared/src/index.ts"]
+      "@sap-triage/shared": ["../../packages/shared/src/index.ts"],
+      // Bypass pnpm symlinks: resolve directly to the generated Prisma client
+      // (same location as schema.prisma `output = "../node_modules/.prisma/client"`).
+      // Without this, tsc on Linux follows the pnpm hoisted symlink into the
+      // pnpm virtual store stub that lacks the generated model types.
+      "@prisma/client": ["./node_modules/.prisma/client"]
     }
   },
   "include": ["src/**/*"],
