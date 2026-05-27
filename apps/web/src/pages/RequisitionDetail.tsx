@@ -5,7 +5,7 @@ import { apiClient } from '../services/api.client';
 import { useTriage } from '../hooks/useTriage';
 import { TriagePanel } from '../components/TriagePanel/TriagePanel';
 import { RiskBadge } from '../components/RiskBadge/RiskBadge';
-import { getPrStatusConfig, formatCurrency, formatDate, PR_TYPE_LABELS, ACCOUNT_ASSIGNMENT_LABELS, ITEM_CATEGORY_LABELS } from '../utils/sap.utils';
+import { getPrStatusConfig, formatCurrency, formatDate, PR_TYPE_LABELS, ITEM_CATEGORY_LABELS } from '../utils/sap.utils';
 
 export function RequisitionDetail() {
   const { id } = useParams<{ id: string }>();
