@@ -202,6 +202,27 @@ describe('POST /api/v1/triage/run-batch', () => {
     );
     expect(failed?.status).toBe('rejected');
   });
+
+  it('does not expose raw error messages in batch failure results (no info disclosure)', async () => {
+    const pr = await seedRequisition('0010099012');
+    // Simulate an AI provider error that contains sensitive internal details
+    mockAnalyze.mockRejectedValueOnce(new Error('Claude API key invalid: sk-ant-super-secret-credential'));
+
+    const res = await request(app)
+      .post('/api/v1/triage/run-batch')
+      .set('X-API-Key', API_KEY)
+      .send({ requisitionIds: [pr.id] });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.failed).toBe(1);
+    // Raw error message must NOT be in the response — only a generic message
+    expect(JSON.stringify(res.body)).not.toContain('sk-ant-super-secret-credential');
+    expect(JSON.stringify(res.body)).not.toContain('Claude API key invalid');
+    // Generic message is present
+    const failedItem = res.body.data.results[0] as { error: string };
+    expect(typeof failedItem.error).toBe('string');
+    expect(failedItem.error.length).toBeGreaterThan(0);
+  });
 });
 
 describe('GET /api/v1/triage/:id', () => {

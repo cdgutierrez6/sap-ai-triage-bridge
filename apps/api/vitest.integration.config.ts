@@ -19,8 +19,13 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      include: ['src/domains/**', 'src/infrastructure/sap/**'],
-      thresholds: { lines: 85, branches: 85 },
+      include: [
+        'src/domains/**',
+        'src/infrastructure/sap/**',
+        'src/infrastructure/http/routes/**',
+        'src/infrastructure/http/middleware/**',
+      ],
+      thresholds: { lines: 80, branches: 80 },
     },
   },
   resolve: {

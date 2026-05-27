@@ -3,13 +3,17 @@ import { z } from 'zod';
 import type { TriageService } from '../../../domains/triage/TriageService';
 import { AppError } from '../middleware/error.middleware';
 import { env } from '../../../config/env';
+import { logger } from '../../../config/logger';
+
+// Strict UUID v4 pattern — prevents loose matches like "----...----" (36 dashes)
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function createTriageRouter(triageService: TriageService): Router {
   const router = Router();
 
   router.post('/run/:requisitionId', async (req: Request, res: Response, next: NextFunction) => {
     const requisitionId = req.params.requisitionId as string;
-    if (!requisitionId?.match(/^[0-9a-f-]{36}$/i)) {
+    if (!UUID_REGEX.test(requisitionId)) {
       next(new AppError('VALIDATION_ERROR', 'Invalid requisitionId format', 422));
       return;
     }
@@ -28,6 +32,16 @@ export function createTriageRouter(triageService: TriageService): Router {
 
     const results = await Promise.allSettled(parsed.data.requisitionIds.map((id) => triageService.runTriage(id)));
 
+    // Log failures server-side before sanitizing the response — never forward raw error.message to client (BLOCKER-05)
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') {
+        logger.error(
+          { err: r.reason, requisitionId: parsed.data.requisitionIds[i] },
+          '[TriageBatch] item failed',
+        );
+      }
+    });
+
     res.json({
       data: {
         succeeded: results.filter((r) => r.status === 'fulfilled').length,
@@ -35,7 +49,7 @@ export function createTriageRouter(triageService: TriageService): Router {
         results: results.map((r, i) => ({
           requisitionId: parsed.data.requisitionIds[i],
           status: r.status,
-          ...(r.status === 'fulfilled' ? { triage: r.value } : { error: (r.reason as Error).message }),
+          ...(r.status === 'fulfilled' ? { triage: r.value } : { error: 'Triage failed for this requisition' }),
         })),
       },
     });
@@ -43,7 +57,7 @@ export function createTriageRouter(triageService: TriageService): Router {
 
   router.get('/:requisitionId', async (req: Request, res: Response, next: NextFunction) => {
     const requisitionId = req.params.requisitionId as string;
-    if (!requisitionId?.match(/^[0-9a-f-]{36}$/i)) {
+    if (!UUID_REGEX.test(requisitionId)) {
       next(new AppError('VALIDATION_ERROR', 'Invalid requisitionId format', 422));
       return;
     }

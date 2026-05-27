@@ -111,6 +111,13 @@ export function createRequisitionsRouter(prisma: PrismaClient): Router {
   router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id as string;
 
+    // Validate UUID format before DB call — prevents Prisma from throwing P2023
+    // and leaking "invalid input syntax for type uuid" in the error response
+    if (!id?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      next(new AppError('VALIDATION_ERROR', 'id must be a valid UUID', 422, 'id'));
+      return;
+    }
+
     const record = await prisma.purchaseRequisition.findUnique({
       where: { id },
       include: {
