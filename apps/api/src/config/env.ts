@@ -1,5 +1,17 @@
 import { z } from 'zod';
 
+// Load .env in non-production environments.
+// Uses Node.js built-in loadEnvFile (v20.12+) — no dotenv dependency needed.
+// Safe to call multiple times: duplicates are ignored.
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (process as any).loadEnvFile('.env');
+  } catch {
+    // .env not found — env vars must come from the shell (CI, Docker, etc.)
+  }
+}
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
