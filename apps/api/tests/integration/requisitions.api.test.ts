@@ -24,11 +24,14 @@ async function seedRequisition() {
 }
 
 describe('GET /api/v1/health', () => {
-  it('returns 200 with health status', async () => {
+  it('returns 200 with status and timestamp (no internal details)', async () => {
     const res = await request(app).get('/api/v1/health');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('status');
-    expect(res.body).toHaveProperty('sapMode');
+    expect(res.body).toHaveProperty('status', 'ok');
+    expect(res.body).toHaveProperty('timestamp');
+    // Public endpoint intentionally omits sapMode and aiProvider
+    expect(res.body).not.toHaveProperty('sapMode');
+    expect(res.body).not.toHaveProperty('aiProvider');
   });
 });
 
