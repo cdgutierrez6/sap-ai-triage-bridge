@@ -31,6 +31,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@sap-triage/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
+      // Resolve @prisma/client to our custom generated output so both TypeScript
+      // types AND the Vitest runtime use the same full client (with model types
+      // and the correct query engine). Without this, the runtime falls through to
+      // the pnpm store stub which lacks model methods (purchaseRequisition, etc.)
+      '@prisma/client': path.resolve(__dirname, './src/__generated__/prisma'),
     },
   },
 });

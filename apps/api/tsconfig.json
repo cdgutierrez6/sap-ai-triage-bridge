@@ -11,11 +11,11 @@
     "resolveJsonModule": true,
     "paths": {
       "@sap-triage/shared": ["../../packages/shared/src/index.ts"],
-      // Bypass pnpm symlinks: resolve directly to the generated Prisma client
-      // (same location as schema.prisma `output = "../node_modules/.prisma/client"`).
-      // Without this, tsc on Linux follows the pnpm hoisted symlink into the
-      // pnpm virtual store stub that lacks the generated model types.
-      "@prisma/client": ["./node_modules/.prisma/client"]
+      // Resolve directly to the generated Prisma client (outside node_modules).
+      // This directory is NOT excluded by tsconfig "exclude": ["node_modules"],
+      // so tsc reads the real generated model types without following pnpm symlinks.
+      // Matches schema.prisma `output = "../src/__generated__/prisma"`.
+      "@prisma/client": ["./src/__generated__/prisma"]
     }
   },
   "include": ["src/**/*"],
